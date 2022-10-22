@@ -100,7 +100,7 @@ lab1_switch_to_user(void) {
 static void
 lab1_switch_to_kernel(void) {
     //LAB1 CHALLENGE 1 :  TODO
-    asm volatile(
+    __asm__ __volatile__(
     	"int %0 \n"
     	"movl %%ebp,%%esp \n" 
     	:

@@ -150,11 +150,6 @@ print_regs(struct pushregs *regs) {
 struct trapframe switchk2u, *switchu2k;
 static inline __attribute__((always_inline)) void switch_to_user(struct trapframe *tf) {
     if (tf->tf_cs != USER_CS) {
-        // tf->tf_cs = USER_CS;
-        // tf->tf_ds = tf->tf_es = tf->tf_ss = USER_DS;
-        // tf->tf_eflags |= FL_IOPL_MASK;
-        // tf->tf_esp = (uint32_t)tf + sizeof(struct trapframe) - 8
-        
         switchk2u = *tf;
 
         switchk2u.tf_cs = USER_CS;
@@ -173,12 +168,12 @@ static inline __attribute__((always_inline)) void switch_to_user(struct trapfram
 static inline __attribute__((always_inline)) void switch_to_kernel(struct trapframe *tf) {
     if (tf->tf_cs != KERNEL_CS) {
         tf->tf_cs = KERNEL_CS;
-        tf->tf_ds = tf->tf_es = KERNEL_DS;
+        tf->tf_ds = tf->tf_es =tf->tf_ss = KERNEL_DS;
         tf->tf_eflags &= ~FL_IOPL_MASK;
         switchu2k = (struct trapframe *)(tf->tf_esp - (sizeof(struct trapframe) - 8));
-
         memmove(switchu2k, tf, sizeof(struct trapframe) - 8);
         *((uint32_t *)tf - 1) = (uint32_t)switchu2k;
+       
     }
 }
 
@@ -212,10 +207,12 @@ trap_dispatch(struct trapframe *tf) {
          if (c == '0'&&!trap_in_kernel(tf)) {
         //切换为内核态
         switch_to_kernel(tf);
+        cprintf("user to kernel\n");
         print_trapframe(tf);
         } else if (c == '3'&&(trap_in_kernel(tf))) {
         //切换为用户态
         switch_to_user(tf);
+        cprintf("kernel to user\n");
         print_trapframe(tf);
         }
         break;
