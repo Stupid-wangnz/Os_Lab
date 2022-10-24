@@ -131,7 +131,7 @@ default_alloc_pages(size_t n) {
         struct Page *p = le2page(le, page_link);
         if (p->property >= n) {
             page = p;
-            SetPageReserved(page);
+            //SetPageReserved(page);
             break;
         }
     }
