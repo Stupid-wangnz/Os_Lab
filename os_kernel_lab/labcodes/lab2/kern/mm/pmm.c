@@ -45,7 +45,7 @@ uintptr_t boot_cr3;
 
 // physical memory management
 const struct pmm_manager *pmm_manager;
-
+ppn_t first_ppn = 0;
 /* *
  * The page directory entry corresponding to the virtual address range
  * [VPT, VPT + PTSIZE) points to the page directory itself. Thus, the page
@@ -235,6 +235,7 @@ page_init(void) {
                 end = ROUNDDOWN(end, PGSIZE);
                 if (begin < end) {
                     init_memmap(pa2page(begin), (end - begin) / PGSIZE);
+                    first_ppn = page2ppn(pa2page(begin));
                 }
             }
         }
