@@ -9,32 +9,33 @@ Booting from Hard Disk..(THU.CST) os is loading ...
 
 Special kernel symbols:
   entry  0xc0100036 (phys)
-  etext  0xc01065d6 (phys)
-  edata  0xc011d000 (phys)
-  end    0xc011df88 (phys)
-Kernel executable memory footprint: 120KB
-ebp:0xc0119f38 eip:0xc0100af5
-arg :0x00010094 0x00010094 0xc0119f68 0xc01000cc
+  etext  0xc010794f (phys)
+  edata  0xc0120000 (phys)
+  end    0xc01210e0 (phys)
+Kernel executable memory footprint: 133KB
+ebp:0xc011cf38 eip:0xc0100af5
+arg :0x00010094 0x00010094 0xc011cf68 0xc01000cc
     kern/debug/kdebug.c:309: print_stackframe+26
-ebp:0xc0119f48 eip:0xc0100df2
-arg :0x00000000 0x00000000 0x00000000 0xc0119fb8
+ebp:0xc011cf48 eip:0xc0100df2
+arg :0x00000000 0x00000000 0x00000000 0xc011cfb8
     kern/debug/kmonitor.c:129: mon_backtrace+14
-ebp:0xc0119f68 eip:0xc01000cc
-arg :0x00000000 0xc0119f90 0xffff0000 0xc0119f94
+ebp:0xc011cf68 eip:0xc01000cc
+arg :0x00000000 0xc011cf90 0xffff0000 0xc011cf94
     kern/init/init.c:49: grade_backtrace2+37
-ebp:0xc0119f88 eip:0xc01000fa
-arg :0x00000000 0xffff0000 0xc0119fb4 0x0000002a
+ebp:0xc011cf88 eip:0xc01000fa
+arg :0x00000000 0xffff0000 0xc011cfb4 0x0000002a
     kern/init/init.c:54: grade_backtrace1+42
-ebp:0xc0119fa8 eip:0xc010011d
+ebp:0xc011cfa8 eip:0xc010011d
 arg :0x00000000 0xc0100036 0xffff0000 0x0000001d
     kern/init/init.c:59: grade_backtrace0+27
-ebp:0xc0119fc8 eip:0xc0100147
-arg :0xc01065fc 0xc01065e0 0x00000f88 0x00000000
+ebp:0xc011cfc8 eip:0xc0100147
+arg :0xc010797c 0xc0107960 0x000010e0 0x00000000
     kern/init/init.c:64: grade_backtrace+38
-ebp:0xc0119ff8 eip:0xc010008b
-arg :0xc01067f0 0xc01067f8 0xc0100d6e 0xc0106817
+ebp:0xc011cff8 eip:0xc010008b
+arg :0xc0107b70 0xc0107b78 0xc0100d6e 0xc0107b97
     kern/init/init.c:29: kern_init+84
-memory management: default_pmm_manager
+memory management: buddy_pmm_manager
+buddy system init success
 e820map:
   memory: 0009fc00, [00000000, 0009fbff], type = 1.
   memory: 00000400, [0009fc00, 0009ffff], type = 2.
@@ -42,6 +43,165 @@ e820map:
   memory: 07ee0000, [00100000, 07fdffff], type = 1.
   memory: 00020000, [07fe0000, 07ffffff], type = 2.
   memory: 00040000, [fffc0000, ffffffff], type = 2.
+[!]BS: Printing buddy array:
+0 layer: 
+1 layer: 
+2 layer: 
+3 layer: 
+4 layer: 
+5 layer: 
+6 layer: 
+7 layer: 
+8 layer: 
+9 layer: 
+10 layer: 
+11 layer: 
+12 layer: 
+13 layer: 
+14 layer: 16384 
+---------------------------
+alloc 3*1 page
+[!]BS: Printing buddy array:
+0 layer: 1 
+1 layer: 
+2 layer: 4 
+3 layer: 8 
+4 layer: 16 
+5 layer: 32 
+6 layer: 64 
+7 layer: 128 
+8 layer: 256 
+9 layer: 512 
+10 layer: 1024 
+11 layer: 2048 
+12 layer: 4096 
+13 layer: 8192 
+14 layer: 
+---------------------------
+free 3*1 page
+[!]BS: Printing buddy array:
+0 layer: 1 1 
+1 layer: 
+2 layer: 4 
+3 layer: 8 
+4 layer: 16 
+5 layer: 32 
+6 layer: 64 
+7 layer: 128 
+8 layer: 256 
+9 layer: 512 
+10 layer: 1024 
+11 layer: 2048 
+12 layer: 4096 
+13 layer: 8192 
+14 layer: 
+---------------------------
+[!]BS: Printing buddy array:
+0 layer: 1 
+1 layer: 2 
+2 layer: 4 
+3 layer: 8 
+4 layer: 16 
+5 layer: 32 
+6 layer: 64 
+7 layer: 128 
+8 layer: 256 
+9 layer: 512 
+10 layer: 1024 
+11 layer: 2048 
+12 layer: 4096 
+13 layer: 8192 
+14 layer: 
+---------------------------
+[!]BS: Printing buddy array:
+0 layer: 
+1 layer: 
+2 layer: 
+3 layer: 
+4 layer: 
+5 layer: 
+6 layer: 
+7 layer: 
+8 layer: 
+9 layer: 
+10 layer: 
+11 layer: 
+12 layer: 
+13 layer: 
+14 layer: 16384 
+---------------------------
+alloc 4,2,1 page
+[!]BS: Printing buddy array:
+0 layer: 1 
+1 layer: 
+2 layer: 
+3 layer: 8 
+4 layer: 16 
+5 layer: 32 
+6 layer: 64 
+7 layer: 128 
+8 layer: 256 
+9 layer: 512 
+10 layer: 1024 
+11 layer: 2048 
+12 layer: 4096 
+13 layer: 8192 
+14 layer: 
+---------------------------
+free 4,2,1 page
+[!]BS: Printing buddy array:
+0 layer: 
+1 layer: 
+2 layer: 
+3 layer: 
+4 layer: 
+5 layer: 
+6 layer: 
+7 layer: 
+8 layer: 
+9 layer: 
+10 layer: 
+11 layer: 
+12 layer: 
+13 layer: 
+14 layer: 16384 
+---------------------------
+alloc 2*3 page
+[!]BS: Printing buddy array:
+0 layer: 
+1 layer: 
+2 layer: 
+3 layer: 8 
+4 layer: 16 
+5 layer: 32 
+6 layer: 64 
+7 layer: 128 
+8 layer: 256 
+9 layer: 512 
+10 layer: 1024 
+11 layer: 2048 
+12 layer: 4096 
+13 layer: 8192 
+14 layer: 
+---------------------------
+free 2*3 page
+[!]BS: Printing buddy array:
+0 layer: 
+1 layer: 
+2 layer: 
+3 layer: 
+4 layer: 
+5 layer: 
+6 layer: 
+7 layer: 
+8 layer: 
+9 layer: 
+10 layer: 
+11 layer: 
+12 layer: 
+13 layer: 
+14 layer: 16384 
+---------------------------
 check_alloc_page() succeeded!
 check_pgdir() succeeded!
 check_boot_pgdir() succeeded!
@@ -58,23 +218,23 @@ End of Test.
 kernel panic at kern/trap/trap.c:18:
     EOT: kernel seems ok.
 stack trackback:
-ebp:0xc0119ec0 eip:0xc0100af5
-arg :0xc01066a8 0xc0119f04 0x00000012 0xc0119eec
+ebp:0xc011cec0 eip:0xc0100af5
+arg :0xc0107a28 0xc011cf04 0x00000012 0xc011ceec
     kern/debug/kdebug.c:309: print_stackframe+26
-ebp:0xc0119ef0 eip:0xc010049d
-arg :0xc010698e 0x00000012 0xc0106978 0xc0119f34
+ebp:0xc011cef0 eip:0xc010049d
+arg :0xc0107d0e 0x00000012 0xc0107cf8 0xc011cf34
     kern/debug/panic.c:27: __panic+107
-ebp:0xc0119f10 eip:0xc01019d7
-arg :0xc0119f34 0x00000030 0xc01072f0 0x00000003
+ebp:0xc011cf10 eip:0xc01019d7
+arg :0xc011cf34 0x00000030 0xc0108670 0x00000003
     kern/trap/trap.c:0: print_ticks+69
-ebp:0xc0119f60 eip:0xc0101f30
-arg :0xc0119f8c 0xc01002e7 0xc0106906 0xc0119fa4
+ebp:0xc011cf60 eip:0xc0101f30
+arg :0xc011cf8c 0xc01002e7 0xc0107c86 0xc011cfa4
     kern/trap/trap.c:195: trap_dispatch+166
-ebp:0xc0119f80 eip:0xc0102339
-arg :0xc0119f8c 0x0000807c 0x00010094 0xc0119ff8
+ebp:0xc011cf80 eip:0xc0102339
+arg :0xc011cf8c 0x0000807c 0x00010094 0xc011cff8
     kern/trap/trap.c:245: trap+20
-ebp:0xc0119ff8 eip:0xc0102dc4
-arg :0xc01067f0 0xc01067f8 0xc0100d6e 0xc0106817
+ebp:0xc011cff8 eip:0xc0102dc4
+arg :0xc0107b70 0xc0107b78 0xc0100d6e 0xc0107b97
     kern/trap/trapentry.S:24: <unknown>+0
 Welcome to the kernel debug monitor!!
 Type 'help' for a list of commands.

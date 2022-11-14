@@ -44,8 +44,11 @@ seta20.2:
     outb %al, $0x60                                 # 0xdf = 11011111, means set P2's A20 bit(the 1 bit) to 1
 
 probe_memory:
+# 对0x8000处的32位单元清零,即给位于0x8000处的
+# struct e820map的成员变量nr_map清零
     movl $0, 0x8000
     xorl %ebx, %ebx
+# 表示设置调用INT 15h BIOS中断后，BIOS返回的映射地址描述符的起始地址
     movw $0x8004, %di
 start_probe:
     movl $0xE820, %eax

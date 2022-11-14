@@ -45,7 +45,7 @@ uintptr_t boot_cr3;
 
 // physical memory management
 const struct pmm_manager *pmm_manager;
-ppn_t first_ppn = 0;
+ppn_t first_ppn = __INT_MAX__;
 /* *
  * The page directory entry corresponding to the virtual address range
  * [VPT, VPT + PTSIZE) points to the page directory itself. Thus, the page
@@ -234,8 +234,8 @@ page_init(void) {
                 begin = ROUNDUP(begin, PGSIZE);
                 end = ROUNDDOWN(end, PGSIZE);
                 if (begin < end) {
-                    init_memmap(pa2page(begin), (end - begin) / PGSIZE);
                     first_ppn = page2ppn(pa2page(begin));
+                    init_memmap(pa2page(begin), (end - begin) / PGSIZE);
                 }
             }
         }
@@ -490,7 +490,6 @@ check_pgdir(void) {
     struct Page *p1, *p2;
     p1 = alloc_page();
     assert(page_insert(boot_pgdir, p1, 0x0, 0) == 0);
-
     pte_t *ptep;
     assert((ptep = get_pte(boot_pgdir, 0x0, 0)) != NULL);
     assert(pte2page(*ptep) == p1);

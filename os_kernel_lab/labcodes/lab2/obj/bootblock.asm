@@ -61,12 +61,15 @@ seta20.2:
 00007c1e <probe_memory>:
 
 probe_memory:
+# 对0x8000处的32位单元清零,即给位于0x8000处的
+# struct e820map的成员变量nr_map清零
     movl $0, 0x8000
     7c1e:	66 c7 06 00 80       	movw   $0x8000,(%esi)
     7c23:	00 00                	add    %al,(%eax)
     7c25:	00 00                	add    %al,(%eax)
     xorl %ebx, %ebx
     7c27:	66 31 db             	xor    %bx,%bx
+# 表示设置调用INT 15h BIOS中断后，BIOS返回的映射地址描述符的起始地址
     movw $0x8004, %di
     7c2a:	bf                   	.byte 0xbf
     7c2b:	04 80                	add    $0x80,%al

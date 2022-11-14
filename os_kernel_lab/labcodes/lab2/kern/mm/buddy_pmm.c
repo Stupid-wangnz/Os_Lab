@@ -7,9 +7,15 @@ free_buddy_t buddy_s;
 #define buddy_array (buddy_s.free_array) //链表数组
 #define max_order (buddy_s.max_order) //最大的层数
 #define nr_free (buddy_s.nr_free) //剩余的空闲块
+#define ppm_head_count (buddy_s.ppm_head_count)
 
 extern ppn_t first_ppn;
-
+PPN_head head_ppn[MAX_BUDDY_NUM];
+void showHead(){
+    for(int i=0;i<ppm_head_count;i++){
+        cprintf("fppn:%d\torder:%d\n",head_ppn[i].first_ppn,head_ppn[i].order);
+    }
+}
 static int IS_POWER_OF_2(size_t n) {
     if (n & (n - 1)) { 
         return 0;
@@ -80,8 +86,13 @@ buddy_init(void) {
     for (int i = 0;i < MAX_BUDDY_ORDER+1;i ++){
         list_init(buddy_array + i); 
     }
+    for (int i = 0;i < MAX_BUDDY_NUM;i ++){
+        head_ppn[i].first_ppn=-1;
+        head_ppn[i].order=0;
+    }
     max_order = 0;
     nr_free = 0;
+    ppm_head_count=0;
     cprintf("buddy system init success\n");
     return;
 }
@@ -92,9 +103,7 @@ buddy_init_memmap(struct Page *base, size_t n) {
     size_t pnum;
     unsigned int order;
     pnum = ROUNDDOWN2(n);       // 将页数向下取整为2的幂
-    
-    //for debug
-    //pnum = 8;
+
     order = getOrderOf2(pnum);   // 求出页数对应的2的幂
     //cprintf("[!]BS: AVA Page num after rounding down to powers of 2: %d = 2^%d\n", pnum, order);
 
@@ -109,14 +118,51 @@ buddy_init_memmap(struct Page *base, size_t n) {
 
     max_order = order>max_order?order:max_order;
     nr_free += pnum;
-
+    SetPageProperty(base);
     //cprintf("max_order is :%d,nr_free is :%d\n",max_order,nr_free);
     list_add(&(buddy_array[order]), &(base->page_link)); // 将第一页base插入数组的最后一个链表，作为初始化的最大块——16384,的头页
     base->property = order;                       // 将第一页base的property设为最大块的2幂
 
     //cprintf("buddy mem init success\n");
     return;
-}   
+}
+
+//可以对init最更一步优化
+static void
+buddy_init_memmap_new(struct Page *base, size_t n) {
+    assert(n > 0);
+    size_t pnum,prev_pnum;
+    unsigned int order;
+    struct Page *p = base;
+    // 初始化pages数组中范围内的每个Page
+    for (; p != base + n; p ++) {
+        assert(PageReserved(p));
+        p->flags = 0;
+        p->property = -1;   // 全部初始化为非头页
+        set_page_ref(p, 0);
+    }
+    while(n){
+        pnum = ROUNDDOWN2(n);       // 将页数向下取整为2的幂
+        order = getOrderOf2(pnum);   // 求出页数对应的2的幂
+        // 初始化pages数组中范围内的每个Page
+        max_order = order>max_order?order:max_order;   
+        nr_free += pnum;
+        //cprintf("max_order is :%d,nr_free is :%d\n",max_order,nr_free);
+        list_add(&(buddy_array[order]), &(base->page_link)); // 将第一页base插入数组的最后一个链表，作为初始化的最大块——16384,的头页
+        base->property = order;                       // 将第一页base的property设为最大块的2幂
+        if(ppm_head_count==0)
+            head_ppn[ppm_head_count].first_ppn=first_ppn;
+        else
+            head_ppn[ppm_head_count].first_ppn=prev_pnum+head_ppn[ppm_head_count-1].first_ppn;
+
+        head_ppn[ppm_head_count].order = order;
+        ppm_head_count += 1;
+        base += pnum;
+        prev_pnum = pnum;
+        n -= pnum;
+    }
+    return;
+}
 
 /*
  *  buddy_split：分裂指定阶的物理块
@@ -207,6 +253,28 @@ buddy_get_buddy(struct Page *page) {
  
 }
 
+static struct Page*
+buddy_get_buddy_new(struct Page *page) {
+    unsigned int order = page->property;
+    ppn_t head=first_ppn;
+    int i=0;
+    for(;i<ppm_head_count;i+=1){
+        if(page2ppn(page)<head_ppn[i].first_ppn)
+            break;
+    }
+    i-=1;
+    head=head_ppn[i].first_ppn;
+    unsigned int buddy_ppn = head + ((1 << order) ^ (page2ppn(page) - head)); // first_ppn是在ppm.c中新声明的全局变量，表示第一个可分配物理内存页的下标
+    //cprintf("[!]BS: Page NO.%d 's buddy page on order %d is: %d\n", page2ppn(page), order, buddy_ppn);
+    if (buddy_ppn > page2ppn(page)) {
+        return page + (buddy_ppn - page2ppn(page));
+    }
+    else {
+        return page - (page2ppn(page) - buddy_ppn);
+    }
+ 
+}
+
 /*
  *  buddy_free_pages：分配指定大小的物理块
  *  参数：
@@ -256,6 +324,57 @@ buddy_free_pages(struct Page *base, size_t n) {
     return;
 }
 
+static void
+buddy_free_pages_new(struct Page *base, size_t n) {
+    assert(n > 0);
+    unsigned int pnum = 1 << (base->property);
+    assert(ROUNDUP2(n) == pnum);
+    //cprintf("[!]BS: Freeing NO.%d page leading %d pages block: \n", page2ppn(base), pnum);
+    
+    struct Page* left_block = base;
+    struct Page *buddy = NULL;
+    struct Page* tmp = NULL;
+    list_add(&(buddy_array[left_block->property]), &(left_block->page_link)); // 将当前块先插入对应链表中
+    //cprintf("[!]BS: add to list\n");
+    //show_buddy_array();
+    buddy = buddy_get_buddy_new(left_block);
+    ppn_t head;
+    int i=0;
+    for(;i<ppm_head_count;i+=1){
+        if(page2ppn(left_block) < head_ppn[i].first_ppn){
+            break;
+        }
+    }
+    i-= 1;
+    head=head_ppn[i].first_ppn;
+    int head_order=head_ppn[i].order;
+    while (!PageProperty(buddy) && left_block->property < head_order) {
+        //make sure that free the buddy,so left_block must be at lower address
+        if ((uint32_t)left_block > (uint32_t)buddy) {
+            tmp = left_block;
+            left_block = buddy;
+            buddy = tmp;
+        }
+        buddy->property = -1;
+        
+        list_del(&(buddy->page_link)); 
+        list_del(&(left_block->page_link));
+        
+        left_block->property += 1;
+        list_add(&(buddy_array[left_block->property]), &(left_block->page_link)); // 头插入相应链表
+        if(left_block->property==head_order)
+            break;
+        buddy = buddy_get_buddy_new(left_block);
+    }
+    //cprintf("[!]BS: Buddy array after FREE:\n");
+    ClearPageProperty(left_block); // 将回收块的头页设置为空闲
+    nr_free += pnum;
+    //show_buddy_array();
+    //cprintf("[!]BS: nr_free: %d\n", nr_free);
+    
+    return;
+}
+
 static size_t
 buddy_nr_free_pages(void) {
     return nr_free;
@@ -264,6 +383,7 @@ buddy_nr_free_pages(void) {
 
 static void
 basic_check(void) {
+    show_buddy_array();
     struct Page *p0, *p1, *p2;
     p0 = p1 = p2 = NULL;
 
@@ -275,7 +395,9 @@ basic_check(void) {
 
     cprintf("free 3*1 page\n");
     free_page(p0);
+    show_buddy_array();
     free_page(p1);
+    show_buddy_array();
     free_page(p2);
     show_buddy_array();
 
@@ -284,14 +406,14 @@ basic_check(void) {
     assert((p1 = alloc_pages(2)) != NULL);
     assert((p2 = alloc_pages(1)) != NULL);
     show_buddy_array();
-
+    showHead();
     cprintf("free 4,2,1 page\n");
     free_pages(p0, 4);
     free_pages(p1, 2);
     free_pages(p2, 1);
     show_buddy_array();
 
-    cprintf("free 2*3 page\n");
+    cprintf("alloc 2*3 page\n");
     assert((p0 = alloc_pages(3)) != NULL);
     assert((p1 = alloc_pages(3)) != NULL);
     show_buddy_array();
