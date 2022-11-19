@@ -6,6 +6,7 @@
 /* global segment number */
 #define SEG_KTEXT   1
 #define SEG_KDATA   2
+
 #define SEG_UTEXT   3
 #define SEG_UDATA   4
 #define SEG_TSS     5
