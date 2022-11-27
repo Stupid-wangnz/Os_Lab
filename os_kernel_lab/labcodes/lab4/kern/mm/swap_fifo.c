@@ -51,6 +51,7 @@ _fifo_map_swappable(struct mm_struct *mm, uintptr_t addr, struct Page *page, int
     //record the page access situlation
     /*LAB3 EXERCISE 2: YOUR CODE*/ 
     //(1)link the most recent arrival page at the back of the pra_list_head qeueue.
+    list_add(head,entry);
     return 0;
 }
 /*
@@ -67,8 +68,53 @@ _fifo_swap_out_victim(struct mm_struct *mm, struct Page ** ptr_page, int in_tick
      /*LAB3 EXERCISE 2: YOUR CODE*/ 
      //(1)  unlink the  earliest arrival page in front of pra_list_head qeueue
      //(2)  assign the value of *ptr_page to the addr of this page
+     list_entry_t *le=head->prev;
+     assert(head!=le);
+     struct Page *p=le2page(le,pra_page_link);
+     list_del(le);
+     *ptr_page=p; 
      return 0;
 }
+
+static int
+_extend_clock_swap_out_victim(struct mm_struct *mm, struct Page ** ptr_page, int in_tick)
+{
+    list_entry_t *head=(list_entry_t*) mm->sm_priv;
+        assert(head != NULL);
+    assert(in_tick==0);
+     
+    for(int i = 0; i < 3; i++)
+    {
+        list_entry_t *le = head->prev;
+        assert(head!=le);
+        while(le != head)
+        {
+            struct Page *p = le2page(le, pra_page_link);
+            pte_t* ptep = get_pte(mm->pgdir, p->pra_vaddr, 0);
+            // 如果未使用且未修改，则直接分配
+            if(!(*ptep & PTE_A) && !(*ptep & PTE_D))
+            {
+                list_del(le);
+                assert(p !=NULL);
+                *ptr_page = p;
+                return 0;
+            }
+            // 如果在第一次查找中，访问到了一个已经使用过的PTE，则标记为未使用。
+            if(i == 0)
+                *ptep &= ~PTE_A;
+            // 如果在第二次查找中，访问到了一个已修改过的PTE，则标记为未修改。
+            else if(i == 1)
+                *ptep &= ~PTE_D;
+
+            le = le->prev;
+            // 遍历了一回，肯定修改了标志位，所以要刷新TLB
+            tlb_invalidate(mm->pgdir, le);
+        }
+    }
+    // 按照前面的assert与if，不可能会执行到此处，所以return -1
+    return -1;
+}
+
 
 static int
 _fifo_check_swap(void) {
@@ -112,7 +158,6 @@ _fifo_check_swap(void) {
     return 0;
 }
 
-
 static int
 _fifo_init(void)
 {
@@ -138,6 +183,6 @@ struct swap_manager swap_manager_fifo =
      .tick_event      = &_fifo_tick_event,
      .map_swappable   = &_fifo_map_swappable,
      .set_unswappable = &_fifo_set_unswappable,
-     .swap_out_victim = &_fifo_swap_out_victim,
+     .swap_out_victim = &_extend_clock_swap_out_victim,
      .check_swap      = &_fifo_check_swap,
 };

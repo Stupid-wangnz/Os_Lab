@@ -48,6 +48,18 @@ idt_init(void) {
       *     You don't know the meaning of this instruction? just google it! and check the libs/x86.h to know more.
       *     Notice: the argument of lidt is idt_pd. try to find it!
       */
+    extern uintptr_t __vectors[];
+
+    //all gate DPL=0, so use DPL_KERNEL 
+    int i;
+    for(i=0;i<sizeof(idt)/sizeof(struct gatedesc);i++){
+        SETGATE(idt[i],0,GD_KTEXT,__vectors[i],DPL_KERNEL);
+    }
+    SETGATE(idt[T_SYSCALL],1,KERNEL_CS,__vectors[T_SYSCALL],DPL_USER);
+    SETGATE(idt[T_SWITCH_TOK],0,GD_KTEXT,__vectors[T_SWITCH_TOK],DPL_USER);
+    
+    //建立好中断门描述符表后，通过指令lidt把中断门描述符表的起始地址装入IDTR寄存器中，从而完成中段描述符表的初始化工作。
+    lidt(&idt_pd);
 }
 
 static const char *
@@ -176,6 +188,10 @@ trap_dispatch(struct trapframe *tf) {
         }
         break;
     case IRQ_OFFSET + IRQ_TIMER:
+        ticks++;
+        if(ticks%100==0){
+            print_ticks();
+        }
 #if 0
     LAB3 : If some page replacement algorithm(such as CLOCK PRA) need tick to change the priority of pages, 
     then you can add code here. 

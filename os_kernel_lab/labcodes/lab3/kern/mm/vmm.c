@@ -285,8 +285,8 @@ volatile unsigned int pgfault_num=0;
  * @error_code : the error code recorded in trapframe->tf_err which is setted by x86 hardware
  * @addr       : the addr which causes a memory access exception, (the contents of the CR2 register)
  *
- * CALL GRAPH: trap--> trap_dispatch-->pgfault_handler-->do_pgfault
- * The processor provides ucore's do_pgfault function with two items of information to aid in diagnosing
+ * CALL GRAPH: trap--> trap_dispatch-->pgfault_handler-
+ * The processor provides ucore's do_pgfault function wi->do_pgfaultth two items of information to aid in diagnosing
  * the exception and recovering from it.
  *   (1) The contents of the CR2 register. The processor loads the CR2 register with the
  *       32-bit linear address that generated the exception. The do_pgfault fun can
